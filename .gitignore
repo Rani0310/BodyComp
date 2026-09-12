@@ -1,0 +1,11 @@
+.DS_Store
+node_modules/
+dist/
+__pycache__/
+
+# Ghidra project databases - large, regeneratable from re/scripts/
+re/ghidra_project/
+re/ghidra_project_steam/
+re/ghidra_project_steam_unpacked/
+*.rep/
+*.gpr

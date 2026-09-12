@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "deny": [
+      "Bash(git *)",
+
+      "Bash(rm *)",
+      "Bash(sudo *)",
+      "Bash(chmod *)",
+      "Bash(shutdown*)",
+      "Bash(reboot*)",
+      "Bash(kill -9*)",
+
+      "Bash(terraform destroy*)",
+      "Bash(terraform apply*)",
+      "Bash(kubectl delete*)",
+      "Bash(aws * delete*)",
+      "Bash(gcloud * delete*)",
+
+      "Bash(npm publish*)",
+      "Bash(npm install -g*)",
+      "Bash(pip install*--index-url*)",
+
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/.ssh/**)",
+      "Read(**/credentials*)",
+      "Read(**/*secret*)"
+    ],
+    "ask": [
+      "Bash(npm install*)",
+      "Bash(pip install*)",
+      "Bash(yarn add*)",
+
+      "Bash(terraform plan*)",
+      "Bash(aws *)",
+      "Bash(gcloud *)",
+      "Bash(az *)",
+      "Bash(kubectl *)",
+
+      "Bash(curl *)",
+      "Bash(wget *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=$(jq -r '.tool_input.file_path'); case \"$FILE\" in *.js|*.jsx|*.ts|*.tsx|*.json|*.css|*.md) npx prettier --write \"$FILE\" 2>&1 || true ;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}
