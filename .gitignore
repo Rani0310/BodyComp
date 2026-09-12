@@ -2,6 +2,10 @@
 node_modules/
 dist/
 __pycache__/
+venv/
+*.pyc
+instance/
+bodycomp.db
 
 # Ghidra project databases - large, regeneratable from re/scripts/
 re/ghidra_project/
