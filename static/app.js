@@ -453,32 +453,62 @@ async function handleUpload() {
   resultBox.className = "import-result";
   resultBox.textContent = "Importing…";
 
+  let res;
   try {
-    const res = await fetch("/api/import", { method: "POST", body: formData });
-    const data = await res.json();
-    if (!res.ok) {
-      resultBox.className = "import-result error";
-      resultBox.textContent = data.error || "Import failed.";
-      return;
-    }
-    resultBox.className = "import-result success";
-    let msg = `Imported ${data.inserted} new and updated ${data.updated} existing entries.`;
-    if (data.skipped && data.skipped.length) {
-      msg += ` Skipped ${data.skipped.length} row(s) missing a date.`;
-    }
-    resultBox.textContent = msg;
-    fileInput.value = "";
-    await refresh();
+    res = await fetch("/api/import", { method: "POST", body: formData });
+  } catch (err) {
+    showConnectionError();
+    resultBox.className = "import-result error";
+    resultBox.textContent =
+      "Couldn't reach the app's server — see the notice above.";
+    return;
+  }
+
+  let data;
+  try {
+    data = await res.json();
   } catch (err) {
     resultBox.className = "import-result error";
-    resultBox.textContent = "Something went wrong reading that file.";
+    resultBox.textContent =
+      "The server sent back something unexpected. Please try again.";
+    return;
   }
+
+  if (!res.ok) {
+    resultBox.className = "import-result error";
+    resultBox.textContent = data.error || "Import failed.";
+    return;
+  }
+
+  resultBox.className = "import-result success";
+  let msg = `Imported ${data.inserted} new and updated ${data.updated} existing entries.`;
+  if (data.skipped && data.skipped.length) {
+    msg += ` Skipped ${data.skipped.length} row(s) missing or with an unrecognized date.`;
+  }
+  resultBox.textContent = msg;
+  fileInput.value = "";
+  await refresh();
 }
 
 /* ---------------- Bootstrap ---------------- */
 
+function showConnectionError() {
+  $("connection-error").hidden = false;
+}
+
 async function refresh() {
-  const res = await fetch("/api/entries");
+  let res;
+  try {
+    res = await fetch("/api/entries");
+  } catch (err) {
+    showConnectionError();
+    return;
+  }
+  if (!res.ok) {
+    showConnectionError();
+    return;
+  }
+  $("connection-error").hidden = true;
   entries = await res.json();
   renderStats();
   renderCharts();
