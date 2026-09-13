@@ -179,6 +179,13 @@ function lineDataset(label, data, color, dashed = false) {
 }
 
 function renderCharts() {
+  if (typeof Chart === "undefined") {
+    $("no-data-msg").hidden = false;
+    $("no-data-msg").textContent =
+      "Charts couldn't load (the Chart.js library didn't load from the CDN). Check your internet connection and reload the page.";
+    return;
+  }
+
   const p = palette();
   const labels = entries.map((e) => formatDateLabel(e.date));
 
@@ -511,8 +518,12 @@ async function refresh() {
   $("connection-error").hidden = true;
   entries = await res.json();
   renderStats();
-  renderCharts();
   renderTable();
+  try {
+    renderCharts();
+  } catch (err) {
+    console.error("Chart rendering failed:", err);
+  }
 }
 
 function init() {
