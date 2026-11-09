@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BodyComp Tracker</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body>
+<div class="page">
+
+  <header class="app-header">
+    <div>
+      <h1>BodyComp Tracker</h1>
+      <p class="subtitle">Your weekly weigh-in, sleep, nutrition and activity log.</p>
+    </div>
+  </header>
+
+  <div id="storage-error" class="banner-error" hidden>
+    This browser couldn't read or save your entries. Private browsing, blocked
+    site data, or full storage can cause this. Recent changes may not be saved.
+  </div>
+
+  <section class="stats-row" id="stats-row">
+    <!-- stat tiles injected by app.js -->
+  </section>
+
+  <section class="grid-2">
+    <div class="card" id="entry-card">
+      <h2>Log an entry</h2>
+      <form id="entry-form">
+        <div class="field">
+          <label for="f-date">Date</label>
+          <input type="date" id="f-date" required>
+        </div>
+        <div class="field-grid">
+          <div class="field">
+            <label for="f-weight">Weight (lbs)</label>
+            <input type="number" step="0.1" id="f-weight" placeholder="e.g. 189.4">
+          </div>
+          <div class="field">
+            <label for="f-steps">Steps</label>
+            <input type="number" step="1" id="f-steps" placeholder="e.g. 8500">
+          </div>
+          <div class="field">
+            <label for="f-sleep_hours">Sleep (hrs)</label>
+            <input type="number" step="0.1" id="f-sleep_hours" placeholder="e.g. 7.5">
+          </div>
+          <div class="field">
+            <label for="f-sleep_score">Sleep score</label>
+            <input type="number" step="1" id="f-sleep_score" placeholder="0-100">
+          </div>
+          <div class="field">
+            <label for="f-deep_sleep_minutes">Deep sleep (min)</label>
+            <input type="number" step="1" id="f-deep_sleep_minutes" placeholder="e.g. 95">
+          </div>
+          <div class="field">
+            <label for="f-calories_intake">Calories eaten</label>
+            <input type="number" step="1" id="f-calories_intake" placeholder="e.g. 2200">
+          </div>
+          <div class="field">
+            <label for="f-calories_goal">Calorie goal</label>
+            <input type="number" step="1" id="f-calories_goal" placeholder="e.g. 2100">
+          </div>
+          <div class="field">
+            <label for="f-protein_g">Protein (g)</label>
+            <input type="number" step="1" id="f-protein_g" placeholder="e.g. 165">
+          </div>
+          <div class="field">
+            <label for="f-fat_g">Fat (g)</label>
+            <input type="number" step="1" id="f-fat_g" placeholder="e.g. 70">
+          </div>
+          <div class="field">
+            <label for="f-carbs_g">Carbs (g)</label>
+            <input type="number" step="1" id="f-carbs_g" placeholder="e.g. 210">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="save-btn">Save entry</button>
+          <button type="button" class="btn btn-ghost" id="cancel-edit-btn" hidden>Cancel edit</button>
+          <span class="form-hint" id="form-hint"></span>
+        </div>
+      </form>
+    </div>
+
+    <div class="card" id="import-card">
+      <h2>Import &amp; export</h2>
+      <p class="card-help">Already tracking metrics elsewhere? Upload a CSV to bulk-load your history. Dates that already exist will be updated, not duplicated.</p>
+      <p class="card-help">Your entries are stored only in this browser. Export a CSV now and then as a backup.</p>
+      <div class="import-row">
+        <input type="file" id="csv-file" accept=".csv">
+        <button type="button" class="btn btn-primary" id="upload-btn">Upload CSV</button>
+      </div>
+      <div id="import-result" class="import-result" hidden></div>
+      <div class="link-row">
+        <a href="#" id="template-link">Download CSV template</a>
+        <span class="dot">&middot;</span>
+        <a href="#" id="export-link">Export all data as CSV</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-heading">
+    <h2>Trends</h2>
+    <p id="no-data-msg" class="card-help" hidden>Log a few entries (or import a CSV) to see your trends here.</p>
+  </section>
+
+  <section class="grid-2" id="charts-main">
+    <div class="card chart-card">
+      <h3>Weight</h3>
+      <div class="chart-wrap"><canvas id="chart-weight"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>Calories: intake vs. goal</h3>
+      <div class="chart-wrap"><canvas id="chart-calories"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>Macronutrients (g)</h3>
+      <div class="chart-wrap"><canvas id="chart-macros"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>Daily steps</h3>
+      <div class="chart-wrap"><canvas id="chart-steps"></canvas></div>
+    </div>
+  </section>
+
+  <section class="section-heading">
+    <h2>Sleep</h2>
+  </section>
+
+  <section class="grid-3" id="charts-sleep">
+    <div class="card chart-card">
+      <h3>Duration (hrs)</h3>
+      <div class="chart-wrap"><canvas id="chart-sleep-hours"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>Sleep score</h3>
+      <div class="chart-wrap"><canvas id="chart-sleep-score"></canvas></div>
+    </div>
+    <div class="card chart-card">
+      <h3>Deep sleep (min)</h3>
+      <div class="chart-wrap"><canvas id="chart-deep-sleep"></canvas></div>
+    </div>
+  </section>
+
+  <section class="section-heading">
+    <h2>History</h2>
+  </section>
+
+  <section class="card">
+    <div class="table-wrap">
+      <table id="history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Weight</th>
+            <th>Sleep</th>
+            <th>Score</th>
+            <th>Deep sleep</th>
+            <th>Protein</th>
+            <th>Fat</th>
+            <th>Carbs</th>
+            <th>Calories</th>
+            <th>Goal</th>
+            <th>Steps</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+      <p id="history-empty" class="card-help" hidden>No entries yet — add one above to get started.</p>
+    </div>
+  </section>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
